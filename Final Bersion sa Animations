@@ -1,0 +1,389 @@
+//Main
+import 'package:flutter/material.dart';
+import 'pages/home_page.dart';
+import 'pages/message_page.dart';
+import 'pages/profile_page.dart';
+import 'pages/settings_page.dart';
+import 'widgets/app_drawer.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: 'Flutter App',
+      debugShowCheckedModeBanner: false,
+      home: MainScreen(),
+    );
+  }
+}
+
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const HomePage(),
+      const MessagePage(),
+      const ProfilePage(),
+      SettingsPage(),
+    ];
+  }
+
+  void _onTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void _navigateFromDrawer(int index) {
+    Navigator.pop(context); // Close drawer
+    _onTap(index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Flutter App")),
+      drawer: AppDrawer(onItemTap: _navigateFromDrawer),
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onTap,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.message), label: "Messages"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings), label: "Settings"),
+        ],
+      ),
+    );
+  }
+}
+
+//HomePage
+import 'package:flutter/material.dart';
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 1));
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Home")),
+      body: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: const Text(
+              "Welcome Home!",
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+//MessagePage
+import 'package:flutter/material.dart';
+
+class MessagePage extends StatelessWidget {
+  const MessagePage({super.key});
+
+  final List<String> messages = const [
+    "Hello!",
+    "How are you?",
+    "Flutter is awesome",
+    "Check this animation",
+    "Message 5",
+    "Message 6",
+    "Message 7",
+    "Message 8",
+    "Message 9",
+    "Message 10",
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Messages")),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(8),
+        itemCount: messages.length,
+        itemBuilder: (context, index) {
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 50, end: 0), // slide from bottom
+            duration: Duration(milliseconds: 300 + index * 100),
+            builder: (context, value, child) {
+              return Transform.translate(
+                offset: Offset(0, value),
+                child: Opacity(
+                  opacity: 1 - (value / 50), // fade in as it slides
+                  child: child,
+                ),
+              );
+            },
+            child: Card(
+              margin: const EdgeInsets.symmetric(vertical: 5),
+              child: ListTile(
+                leading: const Icon(Icons.message),
+                title: Text(messages[index]),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+//ProfilePage
+import 'package:flutter/material.dart';
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Profile")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Hero(
+              tag: "profileHero",
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (_, __, ___) => const ProfileDetailPage(),
+                      transitionsBuilder: (_, animation, __, child) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child:
+                              ScaleTransition(scale: animation, child: child),
+                        );
+                      },
+                    ),
+                  );
+                },
+                child: const CircleAvatar(
+                  radius: 50,
+                  backgroundImage: AssetImage("assets/Danielparku.jpg"),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 800),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: const Text(
+                "User Profile",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProfileDetailPage extends StatelessWidget {
+  const ProfileDetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Profile Detail")),
+      body: Center(
+        child: Hero(
+          tag: "profileHero",
+          child: const CircleAvatar(
+            radius: 100,
+            backgroundImage: AssetImage("assets/Danielparku.jpg"),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+//SettingsPage
+import 'package:flutter/material.dart';
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Color?> _colorAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _colorAnimation = ColorTween(
+      begin: Colors.blue,
+      end: Colors.red,
+    ).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Settings")),
+      body: Center(
+        child: AnimatedBuilder(
+          animation: _colorAnimation,
+          builder: (context, child) {
+            return Text(
+              "Settings Page",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: _colorAnimation.value,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+//AppDrawer
+import 'package:flutter/material.dart';
+
+class AppDrawer extends StatelessWidget {
+  final void Function(int)? onItemTap;
+
+  const AppDrawer({super.key, this.onItemTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        children: [
+          const UserAccountsDrawerHeader(
+            accountName: Text("Danielu Parku-san"),
+            accountEmail: Text("jyansanchez15@gmail.com"),
+            currentAccountPicture: CircleAvatar(
+              backgroundImage: AssetImage("assets/Danielparku.jpg"),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text("Home"),
+            onTap: () => onItemTap?.call(0),
+          ),
+          ListTile(
+            leading: const Icon(Icons.message),
+            title: const Text("Messages"),
+            onTap: () => onItemTap?.call(1),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text("Profile"),
+            onTap: () => onItemTap?.call(2),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text("Settings"),
+            onTap: () => onItemTap?.call(3),
+          ),
+        ],
+      ),
+    );
+  }
+}
+//Dont Porget to make the asset polder por the asset image 'Danielparku'
