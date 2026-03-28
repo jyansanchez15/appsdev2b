@@ -1,0 +1,263 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+// ================= APP =================
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool isDark = false;
+
+  void toggleTheme(bool value) {
+    setState(() {
+      isDark = value;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: isDark ? ThemeData.dark() : ThemeData(primarySwatch: Colors.blue),
+      home: MainScreen(toggleTheme: toggleTheme),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+// ================= MAIN SCREEN =================
+class MainScreen extends StatefulWidget {
+  final Function(bool) toggleTheme;
+
+  const MainScreen({super.key, required this.toggleTheme});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+
+  late List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const HomePage(),
+      const MessagePage(),
+      const ProfilePage(),
+      SettingsPage(toggleTheme: widget.toggleTheme),
+    ];
+  }
+
+  void _onTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  Widget _buildPage(Widget page) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: animation,
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        key: ValueKey(page.runtimeType),
+        child: page,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Flutter App")),
+      drawer: const AppDrawer(),
+      body: _buildPage(_pages[_currentIndex]),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onTap,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.message), label: "Messages"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings), label: "Settings"),
+        ],
+      ),
+    );
+  }
+}
+
+// ================= HOME =================
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text("Home Page", style: TextStyle(fontSize: 24)),
+    );
+  }
+}
+
+// ================= DRAWER =================
+class AppDrawer extends StatelessWidget {
+  const AppDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        children: const [
+          UserAccountsDrawerHeader(
+            accountName: Text("John Doe"),
+            accountEmail: Text("john@example.com"),
+            currentAccountPicture: CircleAvatar(
+              child: Icon(Icons.person),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.home),
+            title: Text("Home"),
+          ),
+          ListTile(
+            leading: Icon(Icons.settings),
+            title: Text("Settings"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ================= MESSAGES =================
+class MessagePage extends StatelessWidget {
+  const MessagePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<String> messages = List.generate(10, (i) => "Message $i");
+
+    return ListView.builder(
+      itemCount: messages.length,
+      itemBuilder: (context, index) {
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: Duration(milliseconds: 500 + (index * 100)),
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 50 * (1 - value)),
+                child: child,
+              ),
+            );
+          },
+          child: ListTile(
+            leading: const Icon(Icons.message),
+            title: Text(messages[index]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ================= PROFILE =================
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const ProfileDetailPage(),
+              transitionsBuilder: (_, animation, __, child) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+            ),
+          );
+        },
+        child: const Hero(
+          tag: "profile",
+          child: CircleAvatar(
+            radius: 50,
+            child: Icon(Icons.person, size: 50),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ================= PROFILE DETAIL =================
+class ProfileDetailPage extends StatelessWidget {
+  const ProfileDetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Profile Detail")),
+      body: const Center(
+        child: Hero(
+          tag: "profile",
+          child: CircleAvatar(
+            radius: 100,
+            child: Icon(Icons.person, size: 100),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ================= SETTINGS =================
+class SettingsPage extends StatefulWidget {
+  final Function(bool) toggleTheme;
+
+  const SettingsPage({super.key, required this.toggleTheme});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  bool isDark = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SwitchListTile(
+        title: const Text("Dark Mode"),
+        value: isDark,
+        onChanged: (val) {
+          setState(() {
+            isDark = val;
+          });
+          widget.toggleTheme(val);
+        },
+      ),
+    );
+  }
+}
